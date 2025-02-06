@@ -238,49 +238,45 @@ __device__ float measureDist(glm::vec3 a, glm::vec3 b)
 __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *pos, const glm::vec3 *vel) 
  {
   // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-  //glm::vec3 perceived_center;
-  //glm::vec3 boid = pos[iSelf];
-  //
-  //for(int i=0; i<N; i++)
-  //{
-  //  if(i!=iSelf && measureDist(boid, pos[i]) < rule1Distance)
-  //  {
-  //      perceived_center += pos[i]; 
-  //  }
-  //}
-  //perceived_center /= (N-1);
-  //return (perceived_center - boid) * rule1Scale;
+  glm::vec3 perceived_center;
+  glm::vec3 perceived_velocity = {.0, .0, .0};
+  glm::vec3 boid_me = pos[iSelf];
+  glm::vec3 c = {.0, .0, .0};
+  glm::vec3 scaling = {.3, .3, .3};
+  glm::vec3 rule1_out, rule2_out, rule3_out;
+  int numberofboid1 = 0;
+  int numberofboid2 = 0;
+  int numberofboid3 = 0;
 
-  
-  // Rule 2: boids try to stay a distance d away from each other
-    //glm::vec3 c = {.0, .0, .0};
-    //glm::vec3 boid = pos[iSelf];
-    //for(int i=0; i<N; i++)
-    //{
-    //    if(i!=iSelf && measureDist(boid, pos[i]) < rule2Distance)
-    //    {
-    //        c -= (boid_b - pos[i]);
-    //    }
-    //}
-    //return c * rule2Scale;
-
-    
-
-
-  // Rule 3: boids try to match the speed of surrounding boids
-    glm::vec3 perceived_velocity = {.0, .0, .0};
-    glm::vec3 boid_pos = pos[iSelf];
-    for(int i=0; i<N; i++)
+  for(int i=0; i<N; i++)
+  {
+    if(i==iSelf) continue;
+    // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
+    if(measureDist(boid_me, pos[i]) < rule1Distance)
     {
-        if(i!=iSelf && measureDist(boid_pos, pos[i]) < rule3Distance)
-        {
-            
-            perceived_velocity += vel[i];
-        }
+        perceived_center += pos[i]; 
+        numberofboid1++;
     }
-    perceived_velocity /= (N-1);
 
-    return perceived_velocity * rule3Scale;
+    // Rule 2: boids try to stay a distance d away from each other
+    if(measureDist(boid_me, pos[i]) < rule2Distance)
+    {
+         c -= (boid_me - pos[i]);
+    }
+    if(i!=iSelf && measureDist(boid_me, pos[i]) < rule3Distance)
+    {      
+         perceived_velocity += vel[i];
+         numberofboid3++;
+     }
+  }
+  
+  perceived_center /= numberofboid1;
+  perceived_velocity /= numberofboid3;
+  rule1_out = (perceived_center - boid_me) * rule1Scale;
+  rule2_out = c * rule2Scale;
+  rule3_out = perceived_velocity * rule3Scale;
+
+  return (rule1_out + rule2_out + rule3_out) * scaling;
    
 }
 
@@ -292,7 +288,7 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
   glm::vec3 *vel1, glm::vec3 *vel2) 
   {
   // Compute a new velocity based on pos and vel1
-  
+  //basic flocking
   // Clamp the speed
   // Record the new velocity into vel2. Question: why NOT vel1?
   int index = threadIdx.x + (blockIdx.x * blockDim.x);
