@@ -11,7 +11,5 @@
 *.spv
 *.ppm
 *.pgm
-*\tests
-*\test
-*\x64
-#\build
+*.dll
+*.bat
