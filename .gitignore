@@ -1,0 +1,16 @@
+.vs
+*.html
+*.png
+*.yml
+*.css
+*.js
+*.jpg
+*.jpeg
+*.filters
+*.user
+*.spv
+*.ppm
+*.pgm
+*\tests
+*\test
+*\x64
