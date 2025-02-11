@@ -14,7 +14,7 @@
 
 // LOOK-2.1 LOOK-2.3 - toggles for UNIFORM_GRID and COHERENT_GRID
 #define VISUALIZE 1
-#define UNIFORM_GRID 0
+#define UNIFORM_GRID 1
 #define COHERENT_GRID 0
 
 // LOOK-1.2 - change this to adjust particle count in the simulation
@@ -27,11 +27,14 @@ const float DT = 0.2f;
 int main(int argc, char* argv[]) {
   projectName = "565 CUDA Intro: Boids";
 
-  if (init(argc, argv)) {
+  if (init(argc, argv)) 
+  {
     mainLoop();
     Boids::endSimulation();
     return 0;
-  } else {
+  }
+  else 
+  {
     return 1;
   }
 }
@@ -183,7 +186,8 @@ void initShaders(GLuint * program) {
   //====================================
   // Main loop
   //====================================
-  void runCUDA() {
+  void runCUDA() 
+  {
     // Map OpenGL buffer object for writing from CUDA on a single GPU
     // No data is moved (Win & Linux). When mapped to CUDA, OpenGL should not
     // use this buffer
