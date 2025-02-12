@@ -309,19 +309,20 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
   // Clamp the speed
   // Record the new velocity into vel2. Question: why NOT vel1?
   int index = threadIdx.x + (blockIdx.x * blockDim.x);
-    if (index >= N) return;
+  if (index >= N) return;
 
-    // Compute new velocity using helper function
-    glm::vec3 vel_change = computeVelocityChange(N, index, pos, vel1);
+  // Compute new velocity using helper function
+  glm::vec3 velchange = computeVelocityChange(N, index, pos, vel1);
     
-    // Update velocity
-    vel2[index] = vel1[index] + vel_change;
+  // Update velocity
+  vel2[index] = vel1[index] + velchange;
     
-    // Clamp speed to maximum
-    float speed = glm::length(vel2[index]);
-    if (speed > maxSpeed) {
+  // Clamp speed to maximum
+  float speed = glm::length(vel2[index]);
+  if (speed > maxSpeed) 
+  {
         vel2[index] = (vel2[index] / speed) * maxSpeed;
-    }
+  }
 }
 
 /**
@@ -483,7 +484,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                         continue;
                     }
                     glm::vec3 otherPos = pos[boidIndex];
-                    float distance = glm::distance(thisPos, otherPos);
+                    float distance = measureDist(thisPos, otherPos);
                     if (distance < rule1Distance)
                     {
                         perceivedCenter += otherPos;
@@ -556,17 +557,17 @@ void Boids::stepSimulationNaive(float dt) {
   // TODO-1.2 ping-pong the velocity buffers
   dim3 fullBlocksPerGrid((numObjects + blockSize - 1) / blockSize);
 
-    // Step 1: Update velocities using two velocity buffers (ping-pong)
-    // vel1 is read from, vel2 is written to
-    kernUpdateVelocityBruteForce<<<fullBlocksPerGrid, blockSize>>>(
+  // Step 1: Update velocities using two velocity buffers (ping-pong)
+  // vel1 is read from, vel2 is written to
+  kernUpdateVelocityBruteForce<<<fullBlocksPerGrid, blockSize>>>(
         numObjects, 
         dev_pos,
         dev_vel1,    // Input velocity
         dev_vel2     // Output velocity
     );
     
-    // Step 2: Update positions using the newly computed velocities
-    kernUpdatePos<<<fullBlocksPerGrid, blockSize>>>(
+  // Step 2: Update positions using the newly computed velocities
+  kernUpdatePos<<<fullBlocksPerGrid, blockSize>>>(
         numObjects,
         dt,
         dev_pos,
@@ -578,9 +579,6 @@ void Boids::stepSimulationNaive(float dt) {
     dev_vel1 = dev_vel2;
     dev_vel2 = temp;
 
-    // Ensure all GPU operations are complete
-    cudaDeviceSynchronize();
-    checkCUDAErrorWithLine("stepSimulationNaive failed!");
 }
 
 void Boids::stepSimulationScatteredGrid(float dt) 
@@ -596,7 +594,11 @@ void Boids::stepSimulationScatteredGrid(float dt)
     // - label each particle with its array index as well as its grid index.
     //   Use 2x width grids.
 
-    kernResetIntBuffer << <fullBlocksPerGridCells, blockSize >> > (gridCellCount, dev_gridCellStartIndices, -1);
+    kernResetIntBuffer << <fullBlocksPerGridCells, blockSize >> > (
+        gridCellCount, 
+        dev_gridCellStartIndices, 
+        -1);
+    
     checkCUDAErrorWithLine("kernResetIntBuffer failed!");
 
     kernComputeIndices << <fullBlocksPerGrid, blockSize >> > (
@@ -607,13 +609,16 @@ void Boids::stepSimulationScatteredGrid(float dt)
 
     // - Unstable key sort using Thrust. A stable sort isn't necessary, but you
     //   are welcome to do a performance comparison.
-    thrust::sort_by_key(dev_thrust_particleGridIndices, dev_thrust_particleGridIndices + numObjects,
+    thrust::sort_by_key(
+        dev_thrust_particleGridIndices, 
+        dev_thrust_particleGridIndices + numObjects,
         dev_thrust_particleArrayIndices);
 
 
     // - Naively unroll the loop for finding the start and end indices of each
     //   cell's data pointers in the array of boid indices
-    kernIdentifyCellStartEnd << <fullBlocksPerGrid, blockSize >> > (numObjects, dev_particleGridIndices,
+    kernIdentifyCellStartEnd << <fullBlocksPerGrid, blockSize >> > (
+        numObjects, dev_particleGridIndices,
         dev_gridCellStartIndices, dev_gridCellEndIndices);
     checkCUDAErrorWithLine("kernIdentifyCellStartEnd failed!");
 
@@ -629,7 +634,8 @@ void Boids::stepSimulationScatteredGrid(float dt)
 
     
     // - Update positions
-    kernUpdatePos << <fullBlocksPerGrid, blockSize >> > (numObjects, dt, dev_pos, dev_vel2);
+    kernUpdatePos << <fullBlocksPerGrid, blockSize >>> (
+        numObjects, dt, dev_pos, dev_vel2);
     checkCUDAErrorWithLine("kernUpdatePos failed!");
 
     // - Ping-pong buffers as needed
@@ -665,6 +671,10 @@ void Boids::endSimulation() {
   cudaFree(dev_pos);
 
   // TODO-2.1 TODO-2.3 - Free any additional buffers here.
+  cudaFree(dev_particleArrayIndices);
+  cudaFree(dev_particleGridIndices);
+  cudaFree(dev_gridCellStartIndices);
+  cudaFree(dev_gridCellEndIndices);
 }
 
 void Boids::unitTest() 
