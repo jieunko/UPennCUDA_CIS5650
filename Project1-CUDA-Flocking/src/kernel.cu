@@ -450,9 +450,11 @@ __global__ void kernUpdateVelNeighborSearchScattered(
     
     glm::ivec3 startSearchCellClamped = glm::clamp(startSearchCell, glm::ivec3(0), glm::ivec3(gridResolution - 1));
     glm::ivec3 endSearchCellClamped = glm::clamp(endSearchCell, glm::ivec3(0), glm::ivec3(gridResolution - 1));
-    
-    // - For each cell, read the start/end indices in the boid pointer array.
-    for (int z = startSearchCellClamped.z; z <= endSearchCellClamped.z; z++)
+
+
+
+// - For each cell, read the start/end indices in the boid pointer array.
+for (int z = startSearchCellClamped.z; z <= endSearchCellClamped.z; z++)
     {
         for (int y = startSearchCellClamped.y; y <= endSearchCellClamped.y; y++)
         {
@@ -462,19 +464,18 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                 glm::vec3 cellMax = cellMin + glm::vec3(cellWidth);
                 glm::vec3 closestPointInCell = glm::clamp(thisPos, cellMin, cellMax);
     
-                float distanceToCell = glm::distance(thisPos, closestPointInCell);
-                if (distanceToCell > neighborhoodDistance)
-                {
-                    continue;
-                }
+                float dist = glm::distance(thisPos, closestPointInCell);
+                if (dist > neighborhoodDistance) continue;
+                
     
                 int neighborCellIndex1D = gridIndex3Dto1D(x, y, z, gridResolution);
                 int startIndex = gridCellStartIndices[neighborCellIndex1D];
                 int endIndex = gridCellEndIndices[neighborCellIndex1D];
-    
-                // - Access each boid in the cell and compute velocity change from
-                //   the boids rules, if this boid is within the neighborhood distance.
-                for (int i = startIndex; i <= endIndex; i++)
+            if (endIndex < startIndex || startIndex < 0 || endIndex < 0) continue; 
+
+            // - Access each boid in the cell and compute velocity change from
+            //   the boids rules, if this boid is within the neighborhood distance.
+            for (int i = startIndex; i <= endIndex; i++)
                 {
                     int boidIndex = particleArrayIndices[i];
                     if (boidIndex == index)
@@ -482,17 +483,17 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                         continue;
                     }
                     glm::vec3 otherPos = pos[boidIndex];
-                    float distance = glm::distance(thisPos, otherPos);
-                    if (distance < rule1Distance)
+                    float dist = glm::distance(thisPos, otherPos);
+                    if (dist < rule1Distance)
                     {
                         perceivedCenter += otherPos;
                         rule1Neighbors++;
                     }
-                    if (distance < rule2Distance)
+                    if (dist < rule2Distance)
                     {
                         c -= otherPos - thisPos;
                     }
-                    if (distance < rule3Distance)
+                    if (dist < rule3Distance)
                     {
                         perceivedVelocity += vel1[boidIndex];
                         rule3Neighbors++;
