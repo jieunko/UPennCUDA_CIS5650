@@ -248,10 +248,7 @@ void Boids::copyBoidsToVBO(float *vbodptr_positions, float *vbodptr_velocities) 
 * Compute the new velocity on the body with index `iSelf` due to the `N` boids
 * in the `pos` and `vel` arrays.
 */
-__device__ float measureDist(glm::vec3 a, glm::vec3 b)
-{
-    return sqrt(pow((b.x - a.x), 2) + pow((b.y - a.y), 2) + pow((b.z - a.z), 2));;
-}
+
 __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *pos, const glm::vec3 *vel) 
  {
   // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
@@ -269,18 +266,19 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
   {
     if(i==iSelf) continue;
     // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-    if(glm::distance(boid_me, pos[i]) < rule1Distance)
+    float dist = glm::distance(boid_me, pos[i]);
+    if (dist < rule1Distance)
     {
         perceived_center += pos[i]; 
         numberofboid1++;
     }
 
     // Rule 2: boids try to stay a distance d away from each other
-    if(glm::distance(boid_me, pos[i]) < rule2Distance)
+    if(dist < rule2Distance)
     {
          c -= (boid_me - pos[i]);
     }
-    if(i!=iSelf && glm::distance(boid_me, pos[i]) < rule3Distance)
+    if(dist < rule3Distance)
     {      
          perceived_velocity += vel[i];
          numberofboid3++;
