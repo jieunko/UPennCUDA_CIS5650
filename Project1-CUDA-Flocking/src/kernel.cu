@@ -269,18 +269,18 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
   {
     if(i==iSelf) continue;
     // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-    if(measureDist(boid_me, pos[i]) < rule1Distance)
+    if(glm::distance(boid_me, pos[i]) < rule1Distance)
     {
         perceived_center += pos[i]; 
         numberofboid1++;
     }
 
     // Rule 2: boids try to stay a distance d away from each other
-    if(measureDist(boid_me, pos[i]) < rule2Distance)
+    if(glm::distance(boid_me, pos[i]) < rule2Distance)
     {
          c -= (boid_me - pos[i]);
     }
-    if(i!=iSelf && measureDist(boid_me, pos[i]) < rule3Distance)
+    if(i!=iSelf && glm::distance(boid_me, pos[i]) < rule3Distance)
     {      
          perceived_velocity += vel[i];
          numberofboid3++;
@@ -484,7 +484,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                         continue;
                     }
                     glm::vec3 otherPos = pos[boidIndex];
-                    float distance = measureDist(thisPos, otherPos);
+                    float distance = glm::distance(thisPos, otherPos);
                     if (distance < rule1Distance)
                     {
                         perceivedCenter += otherPos;
