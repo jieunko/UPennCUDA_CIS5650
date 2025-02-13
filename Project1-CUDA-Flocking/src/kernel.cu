@@ -668,6 +668,7 @@ glm::vec3* posReshuffle, glm::vec3* vel1Reshuffle)
 
 void Boids::stepSimulationCoherentGrid(float dt) 
 {
+    /*
     // TODO-2.3 - start by copying Boids::stepSimulationNaiveGrid
     dim3 fullBlocksPerGrid((numObjects +blockSize - 1) / blockSize);
     dim3 fullBlocksPerGridCells((gridCellCount +blockSize - 1) / blockSize);
@@ -740,13 +741,14 @@ void Boids::stepSimulationCoherentGrid(float dt)
     checkCUDAErrorWithLine("kernUpdatePos failed!");
 
     // - Ping-pong buffers as needed. THIS MAY BE DIFFERENT FROM BEFORE.
-    glm::vec3* temp = dev_vel1;
+    glm::vec3* temp2 = dev_vel1;
     dev_vel1 = dev_vel2;
-    dev_vel2 = temp;
+    dev_vel2 = temp2;
 
     glm::vec3* temppos = dev_pos;
     dev_pos = dev_posReshuffle;
     dev_posReshuffle = temppos;
+*/
 
 }
 
