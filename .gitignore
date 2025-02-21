@@ -13,3 +13,4 @@
 *.pgm
 *.dll
 *.bat
+*\build
