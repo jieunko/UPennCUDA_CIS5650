@@ -17,10 +17,25 @@ namespace StreamCompaction {
          * For performance analysis, this is supposed to be a simple for loop.
          * (Optional) For better understanding before starting moving to GPU, you can simulate your GPU scan in this function first.
          */
+        // exclusive prefix sum
         void scan(int n, int *odata, const int *idata) {
             timer().startCpuTimer();
             // TODO
+            odata[0] = 0;
+            for (int i = 1; i < n; i++)
+            {
+                odata[i] = odata[i-1] + idata[i-1];
+            }
             timer().endCpuTimer();
+        }
+
+        void scanWithoutTimer(int n, int* odata, const int* idata)
+        {
+            odata[0] = 0;
+            for (int i = 1; i < n; i++)
+            {
+                odata[i] = odata[i-1] + idata[i-1];
+            }
         }
 
         /**
@@ -28,11 +43,31 @@ namespace StreamCompaction {
          *
          * @returns the number of elements remaining after compaction.
          */
+        //remove 0s from array
         int compactWithoutScan(int n, int *odata, const int *idata) {
             timer().startCpuTimer();
             // TODO
+            int count = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (idata[i] == 0) continue;
+                odata[count] = idata[i];
+                count++;
+
+            }
             timer().endCpuTimer();
-            return -1;
+            return count;
+        }
+
+        void criteria(int n, int* odata, const int* idata)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                if (idata[i] == 0) odata[i] = 0;
+                else odata[i] = 1;
+
+            }
+         
         }
 
         /**
@@ -41,10 +76,25 @@ namespace StreamCompaction {
          * @returns the number of elements remaining after compaction.
          */
         int compactWithScan(int n, int *odata, const int *idata) {
+            int *temp = new int[n];
+            int *tempScan = new int[n];
+            int id = 0;
+            
+            
             timer().startCpuTimer();
             // TODO
+            criteria(n, temp, idata);
+            scanWithoutTimer(n, tempScan, temp);
+            for (int i = 0; i < n; i++)
+            {
+                id = tempScan[i];
+                if (temp[i]) odata[id] = idata[i];
+            }
             timer().endCpuTimer();
-            return -1;
+
+            delete[] temp;
+            delete[] tempScan;
+            return id;
         }
     }
 }
