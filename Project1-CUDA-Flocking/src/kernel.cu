@@ -736,8 +736,6 @@ void Boids::stepSimulationCoherentGrid(float dt)
     
     // TODO-2.3 - start by copying Boids::stepSimulationNaiveGrid
     dim3 fullBlocksPerGrid((numObjects +blockSize - 1) / blockSize);
-    dim3 fullBlocksPerGridCells((gridCellCount +blockSize - 1) / blockSize);
-
     
     // Uniform Grid Neighbor search using Thrust sort on cell-coherent data.
     // In Parallel:
@@ -764,25 +762,19 @@ void Boids::stepSimulationCoherentGrid(float dt)
 
     // - Naively unroll the loop for finding the start and end indices of each
     //   cell's data pointers in the array of boid indices
-    kernIdentifyCellStartEnd << < fullBlocksPerGrid, blockSize >> > (
-    numObjects, dev_particleGridIndices,
-    dev_gridCellStartIndices, dev_gridCellEndIndices);
+    kernIdentifyCellStartEnd << < fullBlocksPerGrid, blockSize >> > ( numObjects, dev_particleGridIndices, dev_gridCellStartIndices, dev_gridCellEndIndices);
     checkCUDAErrorWithLine("kernIdentifyCellStartEnd failed!");
 
     // - BIG DIFFERENCE: use the rearranged array index buffer to reshuffle all
     //   the particle data in the simulation array.
     //   CONSIDER WHAT ADDITIONAL BUFFERS YOU NEED
     kernReshuffleBuffer << < fullBlocksPerGrid, blockSize >> > (
-        numObjects, dev_particleArrayIndices, dev_pos, dev_vel1,
-        dev_posReshuffle, dev_vel1Reshuffle
-    );
+        numObjects, dev_particleArrayIndices, dev_pos, dev_vel1, dev_posReshuffle, dev_vel1Reshuffle);
 
 
     // - Perform velocity updates using neighbor search
     kernUpdateVelNeighborSearchCoherent << < fullBlocksPerGrid, blockSize >> > (
-    numObjects, gridSideCount, gridMinimum,
-    gridInverseCellWidth, gridCellWidth,
-    dev_gridCellStartIndices, dev_gridCellEndIndices,
+    numObjects, gridSideCount, gridMinimum, gridInverseCellWidth, gridCellWidth, dev_gridCellStartIndices, dev_gridCellEndIndices,
     dev_posReshuffle, dev_vel1Reshuffle, dev_vel2);
 
     // - Update positions
