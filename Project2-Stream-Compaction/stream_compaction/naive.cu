@@ -32,9 +32,9 @@ namespace StreamCompaction {
             int* dev_a;
             int* dev_b;
             cudaMalloc((void**)&dev_a, n * sizeof(int));
-            checkCUDAError("cudaMalloc dev_idata failed!");
+            checkCUDAError("cudaMalloc dev_a failed!");
             cudaMalloc((void**)&dev_b, n * sizeof(int));
-            checkCUDAError("cudaMalloc dev_odata failed!");
+            checkCUDAError("cudaMalloc dev_b failed!");
             cudaMemcpy(dev_a, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
             int blockSize = 256;
