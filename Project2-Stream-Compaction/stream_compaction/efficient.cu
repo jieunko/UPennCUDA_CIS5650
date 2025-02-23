@@ -16,11 +16,10 @@ namespace StreamCompaction {
             int index =  blockIdx.x * blockDim.x + threadIdx.x;
             if (index >= n) return;
             
-            int frontOffset = (1 << level+1);
+            int frontOffset = 1 << (level+1);
             int backOffset = (1 << level);
             int bound = frontOffset - 1;
-            if ((index + frontOffset - 1) >= n) return;
-            if((index%frontOffset) == bound) inplacedata[index + frontOffset - 1] += inplacedata[index + backOffset - 1];
+            if((index%frontOffset) == bound) inplacedata[index] += inplacedata[index - backOffset];
         }
 
         __global__ void downSweep(int n, int* inplacedata, int level)
@@ -30,13 +29,12 @@ namespace StreamCompaction {
       
             int frontOffset = 1 << (level+1);
             int backOffset = 1 << level;
-            int bound = backOffset - 1;
-            if ((index + frontOffset - 1) >= n) return;
-            if ((index + frontOffset-1) % backOffset == bound)
+            int bound = frontOffset - 1;
+            if (index % frontOffset == bound)
             {
-                int temp = inplacedata[index + backOffset -1];
-                inplacedata[index + backOffset - 1] = inplacedata[index + frontOffset - 1];
-                inplacedata[index + frontOffset - 1] += temp;
+                int temp = inplacedata[index - backOffset];
+                inplacedata[index - backOffset] = inplacedata[index];
+                inplacedata[index] += temp;
             }
         }
         
