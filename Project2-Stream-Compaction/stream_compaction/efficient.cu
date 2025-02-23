@@ -46,13 +46,17 @@ namespace StreamCompaction {
         void scan(int n, int *odata, const int *idata) {
             
             int* dev_idata;
-            cudaMalloc((void**)&dev_idata, n * sizeof(int));
+            int numLevels = ilog2ceil(n);
+            int extended = pow(2, numLevels );
+            printf("n %d level %d, ext %d\n", n, numLevels, extended);
+            if(n%2 ==0) cudaMalloc((void**)&dev_idata, n * sizeof(int));
+            else cudaMalloc((void**)&dev_idata, extended * sizeof(int));
             checkCUDAError("cudaMalloc dev_idata failed!");
             cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
             int blockSize = 256;
             dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
-            int numLevels = ilog2ceil(n);
+            
 
             timer().startGpuTimer();
             // TODO
@@ -60,15 +64,20 @@ namespace StreamCompaction {
             {
                 upSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
             }
-            cudaMemset(&dev_idata[n - 1], 0, sizeof(int));
+            
+            if (n % 2 == 0) cudaMemset(&dev_idata[n - 1], 0, sizeof(int));
+            else { n = extended; cudaMemset(&dev_idata[extended - 1], 0, sizeof(int)); }
 
             for (int d = numLevels - 1; d >= 0; --d)
             {
                 downSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
             }
-         
+            
             timer().endGpuTimer();
             cudaMemcpy(odata, dev_idata, n * sizeof(int), cudaMemcpyDeviceToHost);
+            cudaFree(dev_idata);
+
+
         }
 
         /**
