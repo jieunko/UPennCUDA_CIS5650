@@ -48,9 +48,8 @@ namespace StreamCompaction {
             int* dev_idata;
             int numLevels = ilog2ceil(n);
             int extended = pow(2, numLevels );
-            printf("n %d level %d, ext %d\n", n, numLevels, extended);
-            if(n%2 ==0) cudaMalloc((void**)&dev_idata, n * sizeof(int));
-            else cudaMalloc((void**)&dev_idata, extended * sizeof(int));
+            int arrSize = n % 2 == 0 ? n : extended;
+            cudaMalloc((void**)&dev_idata, arrSize * sizeof(int));
             checkCUDAError("cudaMalloc dev_idata failed!");
             cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
@@ -65,12 +64,12 @@ namespace StreamCompaction {
                 upSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
             }
             
-            if (n % 2 == 0) cudaMemset(&dev_idata[n - 1], 0, sizeof(int));
-            else { n = extended; cudaMemset(&dev_idata[extended - 1], 0, sizeof(int)); }
+            cudaMemset(&dev_idata[arrSize - 1], 0, sizeof(int));
+
 
             for (int d = numLevels - 1; d >= 0; --d)
             {
-                downSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
+                downSweep<<<fullBlocksPerGrid, blockSize >>>(arrSize, dev_idata, d);
             }
             
             timer().endGpuTimer();
@@ -79,6 +78,44 @@ namespace StreamCompaction {
 
 
         }
+
+        void indeviceScan(int n, int* odata, const int* idata)
+        {
+            int* dev_idata;
+            int numLevels = ilog2ceil(n);
+            int extended = pow(2, numLevels );
+            int arrSize = n % 2 == 0 ? n : extended;
+            cudaMalloc((void**)&dev_idata, arrSize * sizeof(int));
+            checkCUDAError("cudaMalloc dev_idata failed!");
+            cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyDeviceToDevice);
+            checkCUDAError("cudaMemcpy Device to Device idata  failed!");
+
+            int blockSize = 256;
+            dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
+            
+            // TODO     
+            for (int d = 0; d < numLevels; ++d)
+            {
+                upSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
+                checkCUDAError("upSweep %d failed!", d);
+            }
+            
+            cudaMemset(&dev_idata[arrSize - 1], 0, sizeof(int));
+
+
+            for (int d = numLevels - 1; d >= 0; --d)
+            {
+                downSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
+                checkCUDAError("downSweep %d failed!", d);
+            }
+
+            cudaMemcpy(odata, dev_idata, n* sizeof(int), cudaMemcpyDeviceToDevice);
+            checkCUDAError("cudaMemcpy Device to Device dev_idata  failed!");
+            cudaFree(dev_idata);
+        }
+
+        
+
 
         /**
          * Performs stream compaction on idata, storing the result into odata.
@@ -90,10 +127,54 @@ namespace StreamCompaction {
          * @returns      The number of elements remaining after compaction.
          */
         int compact(int n, int *odata, const int *idata) {
+            int* dev_idata;
+            int* dev_bools;
+            int* dev_indicies;
+            int* dev_scatter;
+            int t;
+            int t2;
+         
+            cudaMalloc((void**)&dev_idata, n * sizeof(int));
+            checkCUDAError("cudaMalloc dev_idata failed!");
+            cudaMalloc((void**)&dev_bools, n * sizeof(int));
+            checkCUDAError("cudaMalloc dev_bools failed!");
+            cudaMalloc((void**)&dev_indicies, n * sizeof(int));
+            checkCUDAError("cudaMalloc dev_indicies failed!");
+            cudaMalloc((void**)&dev_scatter, n * sizeof(int));
+            checkCUDAError("cudaMalloc dev_scatter failed!");
+
+            cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
+            checkCUDAError("cudaMemcpy dev_idata failed!");
+
+            int blockSize = 256;
+            dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
+
             timer().startGpuTimer();
             // TODO
+            Common::kernMapToBoolean<<<fullBlocksPerGrid, blockSize>>>(n, dev_bools, dev_idata);
+            checkCUDAError("kernMapToBoolean failed!");
+            indeviceScan(n, dev_indicies, dev_bools);
+            
+            Common::kernScatter<<<fullBlocksPerGrid, blockSize>>>(n, dev_scatter, dev_idata, dev_bools, dev_indicies);
+            checkCUDAError("kernScatter failed!");
             timer().endGpuTimer();
-            return -1;
+            
+            int numLevels = ilog2ceil(n);
+            int extended = pow(2, numLevels );
+            int arrSize = n % 2 == 0 ? n : extended;
+            
+            cudaMemcpy(&t,  &dev_indicies[arrSize-1], sizeof(int), cudaMemcpyDeviceToHost);
+            cudaMemcpy(&t2, &dev_bools[arrSize-1], sizeof(int), cudaMemcpyDeviceToHost);
+            checkCUDAError("cudaMemcpy dev_indicies failed!");
+
+            cudaMemcpy(odata, dev_scatter, (t+t2) * sizeof(int), cudaMemcpyDeviceToHost);
+            checkCUDAError("cudaMemcpy odata failed!");
+
+            cudaFree(dev_idata);
+            cudaFree(dev_bools);
+            cudaFree(dev_indicies);
+            cudaFree(dev_scatter);
+            return t;
         }
     }
 }
