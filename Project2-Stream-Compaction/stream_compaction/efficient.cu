@@ -79,13 +79,11 @@ namespace StreamCompaction {
 
         }
 
-        void indeviceScan(int n, int* odata, const int* idata)
+        void indeviceScan(int n, int numLevels,  int* odata, const int* idata)
         {
             int* dev_idata;
-            int numLevels = ilog2ceil(n);
-            int extended = pow(2, numLevels );
-            int arrSize = n % 2 == 0 ? n : extended;
-            cudaMalloc((void**)&dev_idata, arrSize * sizeof(int));
+
+            cudaMalloc((void**)&dev_idata, n * sizeof(int));
             checkCUDAError("cudaMalloc dev_idata failed!");
             cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyDeviceToDevice);
             checkCUDAError("cudaMemcpy Device to Device idata  failed!");
@@ -100,7 +98,7 @@ namespace StreamCompaction {
                 checkCUDAError("upSweep %d failed!", d);
             }
             
-            cudaMemset(&dev_idata[arrSize - 1], 0, sizeof(int));
+            cudaMemset(&dev_idata[n - 1], 0, sizeof(int));
 
 
             for (int d = numLevels - 1; d >= 0; --d)
@@ -131,37 +129,38 @@ namespace StreamCompaction {
             int* dev_bools;
             int* dev_indicies;
             int* dev_scatter;
+            int numLevels = ilog2ceil(n);
+            int extended = pow(2, numLevels );
+            int arrSize = n % 2 == 0 ? n : extended;
             int t;
             int t2;
          
-            cudaMalloc((void**)&dev_idata, n * sizeof(int));
+            cudaMalloc((void**)&dev_idata, arrSize * sizeof(int));
             checkCUDAError("cudaMalloc dev_idata failed!");
-            cudaMalloc((void**)&dev_bools, n * sizeof(int));
+            cudaMalloc((void**)&dev_bools, arrSize * sizeof(int));
             checkCUDAError("cudaMalloc dev_bools failed!");
-            cudaMalloc((void**)&dev_indicies, n * sizeof(int));
+            cudaMalloc((void**)&dev_indicies, arrSize * sizeof(int));
             checkCUDAError("cudaMalloc dev_indicies failed!");
-            cudaMalloc((void**)&dev_scatter, n * sizeof(int));
+            cudaMalloc((void**)&dev_scatter, arrSize * sizeof(int));
             checkCUDAError("cudaMalloc dev_scatter failed!");
 
             cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
-            checkCUDAError("cudaMemcpy dev_idata failed!");
+            cudaMemset(&dev_idata[n], 0, (arrSize-n) * sizeof(int));
 
             int blockSize = 256;
             dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
 
             timer().startGpuTimer();
             // TODO
-            Common::kernMapToBoolean<<<fullBlocksPerGrid, blockSize>>>(n, dev_bools, dev_idata);
+            Common::kernMapToBoolean<<<fullBlocksPerGrid, blockSize>>>(arrSize, dev_bools, dev_idata);
             checkCUDAError("kernMapToBoolean failed!");
-            indeviceScan(n, dev_indicies, dev_bools);
+            indeviceScan(arrSize,numLevels, dev_indicies, dev_bools);
             
-            Common::kernScatter<<<fullBlocksPerGrid, blockSize>>>(n, dev_scatter, dev_idata, dev_bools, dev_indicies);
+            Common::kernScatter<<<fullBlocksPerGrid, blockSize>>>(arrSize, dev_scatter, dev_idata, dev_bools, dev_indicies);
             checkCUDAError("kernScatter failed!");
             timer().endGpuTimer();
             
-            int numLevels = ilog2ceil(n);
-            int extended = pow(2, numLevels );
-            int arrSize = n % 2 == 0 ? n : extended;
+
             
             cudaMemcpy(&t,  &dev_indicies[arrSize-1], sizeof(int), cudaMemcpyDeviceToHost);
             cudaMemcpy(&t2, &dev_bools[arrSize-1], sizeof(int), cudaMemcpyDeviceToHost);
