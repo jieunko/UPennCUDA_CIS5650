@@ -37,7 +37,7 @@ namespace StreamCompaction {
             checkCUDAError("cudaMalloc dev_b failed!");
             cudaMemcpy(dev_a, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
-            int blockSize = 256;
+            int blockSize = 128;
             dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
             int numLevels = ilog2ceil(n);
 
