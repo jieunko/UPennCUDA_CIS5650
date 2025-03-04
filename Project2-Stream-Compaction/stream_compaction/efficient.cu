@@ -39,7 +39,45 @@ namespace StreamCompaction {
             }
             
         }
-        
+
+        /*
+        __global__ void scanSM(int n, int* idata, int* odata)
+        {
+            int thid = threadIdx.x;
+            extern __shared__ float temp[];
+            temp[2 * thid] = idata[2 * thid];
+            int offset = 1;
+            for (int d = n >> 1; d > 0; d >>= 1)
+            {
+                __syncthreads();
+                if (thid < d)
+                {
+                    int ai = offset * (2 * thid + 1) - 1;
+                    int bi = offset * (2 * thid + 2) - 1;
+                    temp[bi] += temp[ai];
+                }
+                offset *= 2;
+            }
+            if (thid == 0) temp[n - 1] = 0;
+            for (int d = 1; d < n; d *= 2)
+            {
+                offset >>= 1;
+                __syncthreads();
+                if (thid < d)
+                {
+                    int ai = offset * (2 * thid + 1) - 1;
+                    int bi = offset * (2 * thid + 2) - 1;
+                    float t = temp[ai];
+                    temp[ai] = temp[bi];
+                    temp[bi] += t;
+                }
+            }
+            __syncthreads();
+
+            odata[2 * thid] = temp[2 * thid];
+            odata[2 * thid + 1] = temp[2 * thid + 1];
+        }
+        */
 
 
         /**
@@ -56,62 +94,94 @@ namespace StreamCompaction {
             cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
             int blockSize = 256;
-            dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
+            //dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
             
 
             timer().startGpuTimer();
             // TODO
             for (int d = 0; d < numLevels; ++d)
             {
+                int numThreads = extended / (1 << (d + 1));
+                dim3 fullBlocksPerGrid((numThreads + blockSize - 1) / blockSize);
                 upSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
             }
-            
+            cudaDeviceSynchronize();
+
             cudaMemset(&dev_idata[arrSize - 1], 0, sizeof(int));
 
 
             for (int d = numLevels - 1; d >= 0; --d)
             {
+                int numThreads = extended / (1 << (d + 1));
+                dim3 fullBlocksPerGrid((numThreads + blockSize - 1) / blockSize);
                 downSweep<<<fullBlocksPerGrid, blockSize >>>(arrSize, dev_idata, d);
             }
-            
+            cudaDeviceSynchronize();
             timer().endGpuTimer();
             cudaMemcpy(odata, dev_idata, n * sizeof(int), cudaMemcpyDeviceToHost);
             cudaFree(dev_idata);
 
 
         }
-
-        void indeviceScan(int n, int numLevels,  int* odata, const int* idata)
+        /*
+        void scanSharedMem(int n, int* odata, const int* idata)
         {
             int* dev_idata;
-
+            int* dev_odata;
             cudaMalloc((void**)&dev_idata, n * sizeof(int));
             checkCUDAError("cudaMalloc dev_idata failed!");
-            cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyDeviceToDevice);
-            checkCUDAError("cudaMemcpy Device to Device idata  failed!");
+            cudaMalloc((void**)&dev_odata, n * sizeof(int));
+            cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
 
             int blockSize = 256;
             dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
+            timer().startGpuTimer();
+            scanSM<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, dev_odata);
+            timer().endGpuTimer();
+
+            cudaMemcpy(odata, dev_odata, n * sizeof(int), cudaMemcpyDeviceToHost);
+            cudaFree(dev_idata);
+            cudaFree(dev_odata);
+
+        }
+        */
+        void indeviceScan(int n, int numLevels,  int* odata, const int* idata)
+        {
+            //int* dev_idata;
+            int extended = pow(2, numLevels);
+            //cudaMalloc((void**)&dev_idata, n * sizeof(int));
+            //checkCUDAError("cudaMalloc dev_idata failed!");
+            //cudaMemcpy(dev_idata, idata, n * sizeof(int), cudaMemcpyDeviceToDevice);
+            //checkCUDAError("cudaMemcpy Device to Device idata  failed!");
+
+            cudaMemcpy(odata, idata, n * sizeof(int), cudaMemcpyDeviceToDevice);
+
+            int blockSize = 256;
+            //dim3 fullBlocksPerGrid((n + blockSize - 1) / blockSize);
             
             // TODO     
             for (int d = 0; d < numLevels; ++d)
             {
-                upSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
+                int numThreads = extended / (1 << (d + 1));
+                dim3 fullBlocksPerGrid((numThreads + blockSize - 1) / blockSize);
+                upSweep<<<fullBlocksPerGrid, blockSize >>>(n, odata, d);
                 checkCUDAError("upSweep %d failed!", d);
             }
             
-            cudaMemset(&dev_idata[n - 1], 0, sizeof(int));
+            cudaMemset(&odata[n - 1], 0, sizeof(int));
 
 
             for (int d = numLevels - 1; d >= 0; --d)
             {
-                downSweep<<<fullBlocksPerGrid, blockSize >>>(n, dev_idata, d);
+                int numThreads = extended / (1 << (d + 1));
+                dim3 fullBlocksPerGrid((numThreads + blockSize - 1) / blockSize);
+                downSweep<<<fullBlocksPerGrid, blockSize >>>(n, odata, d);
                 checkCUDAError("downSweep %d failed!", d);
             }
 
-            cudaMemcpy(odata, dev_idata, n* sizeof(int), cudaMemcpyDeviceToDevice);
-            checkCUDAError("cudaMemcpy Device to Device dev_idata  failed!");
-            cudaFree(dev_idata);
+            //cudaMemcpy(odata, dev_idata, n* sizeof(int), cudaMemcpyDeviceToDevice);
+            //checkCUDAError("cudaMemcpy Device to Device dev_idata  failed!");
+            //cudaFree(dev_idata);
         }
 
         
@@ -156,6 +226,7 @@ namespace StreamCompaction {
             // TODO
             Common::kernMapToBoolean<<<fullBlocksPerGrid, blockSize>>>(arrSize, dev_bools, dev_idata);
             checkCUDAError("kernMapToBoolean failed!");
+
             indeviceScan(arrSize,numLevels, dev_indicies, dev_bools);
             
             Common::kernScatter<<<fullBlocksPerGrid, blockSize>>>(arrSize, dev_scatter, dev_idata, dev_bools, dev_indicies);
