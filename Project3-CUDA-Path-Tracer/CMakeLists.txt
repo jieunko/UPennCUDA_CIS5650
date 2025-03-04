@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
-project(cis565_path_tracer LANGUAGES CUDA CXX)
+#project(cis565_path_tracer LANGUAGES CUDA CXX)
+project(cis565_path_tracer)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -22,6 +23,23 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     # Set the possible values of build type for cmake-gui
     SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
+
+
+########################################
+# CUDA Setup
+########################################
+find_package(CUDA 10 REQUIRED)
+include(${CMAKE_MODULE_PATH}/CUDAComputesList.cmake)
+
+list(APPEND CUDA_NVCC_FLAGS ${CUDA_GENERATE_CODE})
+list(APPEND CUDA_NVCC_FLAGS_DEBUG "-g -G")
+set(CUDA_VERBOSE_BUILD ON)
+
+if(WIN32)
+    # Set up include and lib paths
+    set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH "Host side compiler used by NVCC" FORCE)
+endif(WIN32)
+########################################
 
 find_package(OpenGL REQUIRED)
 
@@ -103,16 +121,19 @@ list(SORT sources)
 list(SORT imgui_headers)
 list(SORT imgui_sources)
 
-source_group("Headers" FILES ${headers})
-source_group("Sources" FILES ${sources})
-source_group("ImGui\\Headers" FILES ${imgui_headers})
-source_group("ImGui\\Sources" FILES ${imgui_sources})
+source_group(Headers FILES ${headers})
+source_group(Sources FILES ${sources})
+source_group(ImGui/Headers FILES ${imgui_headers})
+source_group(ImGui/Sources FILES ${imgui_sources})
 
 #add_subdirectory(src/ImGui)
 #add_subdirectory(stream_compaction)  # TODO: uncomment if using your stream compaction
+#cuda_add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers}) 
 
-add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers} ${imgui_sources} ${imgui_headers})
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+cuda_add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers} ${imgui_sources} ${imgui_headers})
+#set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+target_link_libraries(${CMAKE_PROJECT_NAME} ${LIBRARIES})
+
 if(CMAKE_VERSION VERSION_LESS "3.23.0")
     set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_ARCHITECTURES OFF)
 elseif(CMAKE_VERSION VERSION_LESS "3.24.0")
