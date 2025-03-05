@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.18)
 project(cis565_path_tracer LANGUAGES CUDA CXX)
 #project(cis565_path_tracer)
 
@@ -121,19 +121,16 @@ list(SORT sources)
 list(SORT imgui_headers)
 list(SORT imgui_sources)
 
-source_group(Headers FILES ${headers})
-source_group(Sources FILES ${sources})
-source_group(ImGui/Headers FILES ${imgui_headers})
-source_group(ImGui/Sources FILES ${imgui_sources})
+source_group("Headers" FILES ${headers})
+source_group("Sources" FILES ${sources})
+source_group("ImGui\\Headers" FILES ${imgui_headers})
+source_group("ImGui\\Sources" FILES ${imgui_sources})
 
 #add_subdirectory(src/ImGui)
 #add_subdirectory(stream_compaction)  # TODO: uncomment if using your stream compaction
-#cuda_add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers}) 
 
-cuda_add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers} ${imgui_sources} ${imgui_headers})
-#set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-target_link_libraries(${CMAKE_PROJECT_NAME} ${LIBRARIES})
-
+add_executable(${CMAKE_PROJECT_NAME} ${sources} ${headers} ${imgui_sources} ${imgui_headers})
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 if(CMAKE_VERSION VERSION_LESS "3.23.0")
     set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CUDA_ARCHITECTURES OFF)
 elseif(CMAKE_VERSION VERSION_LESS "3.24.0")
