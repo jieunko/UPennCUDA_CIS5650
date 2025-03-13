@@ -62,7 +62,7 @@ __host__ __device__ void scatterRay(
     //pathSegment.ray.origin = intersect;
     //pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
     //pathSegment.color = m.color;
-    if (rand < probDiffuse)
+    /**if (rand < probDiffuse)
     {
         //pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
         //pathSegment.color = m.color / probDiffuse;
@@ -70,10 +70,11 @@ __host__ __device__ void scatterRay(
         pathSegment.color *= m.color / probDiffuse;
     }
     else
+    */
     {
-        /*if (m.transmittive > 0.0f)
+        if (m.transmittive > 0.0f)
         {  // Transparent material
-
+            //https://henryzxu.github.io/pathtracing-p2/
             bool isEntering = glm::dot(pathSegment.ray.direction, normal) < 0;
             glm::vec3 correctedNormal = isEntering ? normal : -normal;
             float etaI = isEntering ? 1.0f : m.indexOfRefraction;  // Air to glass
@@ -91,6 +92,7 @@ __host__ __device__ void scatterRay(
             if (sinThetaT2 > 1.0f) {
                 // Total Internal Reflection (TIR)
                 pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, correctedNormal);
+                pathSegment.color *= m.color / probDiffuse;
             }
             else {
                 // Compute Fresnel Reflectance using Schlick¡¯s Approximation
@@ -103,58 +105,16 @@ __host__ __device__ void scatterRay(
                     // Reflect
                     pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, correctedNormal);
                     pathSegment.ray.direction = glm::normalize(pathSegment.ray.direction);
-                    pathSegment.color *= m.color/probDiffuse;
+                    pathSegment.color *= R* m.color /  probDiffuse;//m.color/probDiffuse;
                 }
                 else {
                     // Refract
                     pathSegment.ray.direction = glm::refract(pathSegment.ray.direction, correctedNormal, eta);
                     pathSegment.ray.direction = glm::normalize(pathSegment.ray.direction);
-                    pathSegment.color *= m.color / probDiffuse;
+                    pathSegment.color *= (1-R)* glm::dot(m.color, glm::vec3(0.3f, 0.3f, 0.3f)) / probDiffuse;  //probDiffuse;
                 }
             }
             
-        }*/
-        if (m.transmittive > 0.0f)
-        {  // Transparent material
-
-            bool isEntering = glm::dot(pathSegment.ray.direction, normal) < 0;
-            glm::vec3 correctedNormal = isEntering ? normal : -normal;
-            float etaI = isEntering ? 1.0f : m.indexOfRefraction;  // Air to glass
-            float etaT = isEntering ? m.indexOfRefraction : 1.0f;  // Glass to air
-            float eta = etaI / etaT;  // Relative index of refraction
-
-            float cosThetaI = glm::dot(-pathSegment.ray.direction, correctedNormal);
-            float sinThetaI2 = glm::max(0.0f, 1.0f - cosThetaI * cosThetaI);
-            float sinThetaT2 = eta * eta * sinThetaI2;
-
-            glm::vec3 refractedDir = glm::refract(pathSegment.ray.direction, normal, eta);
-
-            glm::vec3 scatterDirection;
-
-            if (sinThetaT2 > 1.0f) {
-                // Total Internal Reflection (TIR)
-                scatterDirection = glm::reflect(pathSegment.ray.direction, correctedNormal);
-            }
-            else {
-                // Compute Fresnel Reflectance using Schlick??s Approximation
-                float cosThetaT = glm::sqrt(1.0f - sinThetaT2);
-                float R0 = powf((etaI - etaT) / (etaI + etaT), 2.0f);
-                float R = R0 + (1 - R0) * powf(1.0f - cosThetaI, 5.0f);
-
-                // Random choice: reflection or refraction
-                if (thrust::uniform_real_distribution<float>(0.0f, 1.0f)(rng) < R) {
-                    // Reflect
-                    scatterDirection = glm::reflect(pathSegment.ray.direction, correctedNormal);
-                }
-                else {
-                    // Refract
-                    scatterDirection = glm::refract(pathSegment.ray.direction, correctedNormal, eta);
-                }
-            }
-            pathSegment.ray.origin = intersect + scatterDirection * 0.001f;  // Offset to avoid self-intersection
-            pathSegment.ray.direction = glm::normalize(scatterDirection);
-            pathSegment.color *= m.color / probDiffuse;
-
         }
         else if (m.hasReflective > .0f)
         {
@@ -182,3 +142,4 @@ __host__ __device__ void scatterRay(
     pathSegment.ray.origin = intersect + pathSegment.ray.direction * 0.01f; 
     
 }
+
