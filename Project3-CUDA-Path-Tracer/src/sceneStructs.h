@@ -38,6 +38,7 @@ struct Material
     {
         float exponent;
         glm::vec3 color;
+        float roughness;
     } specular;
     float hasReflective;
     float hasRefractive;
