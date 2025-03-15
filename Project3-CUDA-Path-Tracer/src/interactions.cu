@@ -72,16 +72,16 @@ __host__ __device__ void scatterRay(
     else
     */
     {
-        if (m.transmittive > 0.0f)
+        if (m.transmittive > 0.5f)
         {  // Transparent material
             //https://henryzxu.github.io/pathtracing-p2/
-            bool isEntering = glm::dot(pathSegment.ray.direction, normal) < 0;
+            bool isEntering = glm::dot(pathSegment.ray.direction, normal) > 0;
             glm::vec3 correctedNormal = isEntering ? normal : -normal;
             float etaI = isEntering ? 1.0f : m.indexOfRefraction;  // Air to glass
             float etaT = isEntering ? m.indexOfRefraction : 1.0f;  // Glass to air
             float eta = etaI / etaT;  // Relative index of refraction
 
-            float cosThetaI = glm::dot(-pathSegment.ray.direction, correctedNormal);
+            float cosThetaI = glm::abs(glm::dot(-pathSegment.ray.direction, correctedNormal));
             float sinThetaI2 = glm::max(0.0f, 1.0f - cosThetaI * cosThetaI);
             float sinThetaT2 = eta * eta * sinThetaI2;
 
@@ -89,7 +89,7 @@ __host__ __device__ void scatterRay(
 
             glm::vec3 scatterDirection;
 
-            if (sinThetaT2 > 1.0f) {
+            if (sinThetaT2 > 0.5f) {
                 // Total Internal Reflection (TIR)
                 pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, correctedNormal);
                 pathSegment.color *= m.color / probDiffuse;
@@ -133,9 +133,10 @@ __host__ __device__ void scatterRay(
         }
         else
         {
-            if (probDiffuse != 0.f) {
+            //if (probDiffuse != 0.f) 
+            {
                 pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
-                pathSegment.color *= m.color / (1.f-probDiffuse);
+                pathSegment.color *= m.color / probDiffuse; // (1.f - probDiffuse);
             }
         }
     }
