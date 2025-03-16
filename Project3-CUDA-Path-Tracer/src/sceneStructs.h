@@ -10,7 +10,8 @@
 enum GeomType
 {
     SPHERE,
-    CUBE
+    CUBE,
+    TRIANGLE
 };
 
 struct Ray
@@ -19,10 +20,18 @@ struct Ray
     glm::vec3 direction;
 };
 
+struct TriangleData
+{
+    glm::vec3 verts[3];
+    glm::vec3 normals[3];
+    glm::vec2 uvs[3];
+};
+
 struct Geom
 {
     enum GeomType type;
     int materialid;
+    TriangleData triData;
     glm::vec3 translation;
     glm::vec3 rotation;
     glm::vec3 scale;
@@ -31,15 +40,34 @@ struct Geom
     glm::mat4 invTranspose;
 };
 
+struct Microfacet
+{
+    bool isMicrofacet = false;
+    float roughness;
+};
+
+struct Specular
+{
+    float exponent;
+    glm::vec3 color;
+    float roughness;
+};
+
+struct DiffuseMap
+{
+    int index = -1;
+    int width, height, channel;
+    int startIdx;
+};
+
 struct Material
 {
     glm::vec3 color;
-    struct
-    {
-        float exponent;
-        glm::vec3 color;
-        float roughness;
-    } specular;
+
+    DiffuseMap diffuseMap;
+    Microfacet microfacet;
+    Specular specular;
+
     float hasReflective;
     float hasRefractive;
     float transmittive;
