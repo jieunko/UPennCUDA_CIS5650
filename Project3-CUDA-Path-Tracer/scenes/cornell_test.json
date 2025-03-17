@@ -58,7 +58,7 @@
         "RES":[800,800],
         "FOVY":45.0,
         "ITERATIONS":1500,
-        "DEPTH":3,
+        "DEPTH":2,
         "FILE":"cornell",
         "EYE":[0.0,5.0,10.5],
         "LOOKAT":[0.0,5.0,0.0],
@@ -117,8 +117,8 @@
         },
         {
             "TYPE":"mesh",
-            "NAME":"Bird",
-            "OBJNAME":"Bird.obj",
+            "NAME":"Clock",
+            "OBJNAME":"Clock_obj.obj",
             "TRANS":[3.0,4.0,1.0],
             "ROTAT":[0.0,0.0,0.0],
             "SCALE":[3.0,3.0,3.0]

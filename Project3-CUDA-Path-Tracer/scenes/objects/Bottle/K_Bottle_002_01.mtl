@@ -1,0 +1,56 @@
+newmtl k_bottle_002_glass_1
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+newmtl k_bottle_002_cromo_1
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+map_Kd C:\Users\user\source\objects\bottle\material\K_BDirtl_02_02.jpg
+newmtl k_bottle_002_cromo_2
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+map_Kd C:\Users\user\source\objects\bottle\material\K_BDirtl_02_02.jpg
+
+newmtl k_bottle_002_glass_2
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+
+newmtl k_bottle_002_liquid_1
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+
+newmtl k_b_002_label_02_1
+Ka 0.100000 0.100000 0.100000
+Kd 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1
+map_Kd C:\Users\user\source\objects\bottle\material\Labels\K_BLabel_02_01.jpg
+
+newmtl k_bottle_002_liquid_2
+Ka 0.100000 0.100000 0.100000
+Kd 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ns 20.000000
+Tr 0.000000
+illum 1

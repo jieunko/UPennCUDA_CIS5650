@@ -108,7 +108,7 @@ void Scene::loadFromJSON(const std::string& jsonName)
             std::vector<glm::vec3> normals;
             std::vector<glm::vec2> uvs;
             std::vector<std::string> materialNames;
-            std::string filePath = "../../../scenes/objects/" + std::string(p["NAME"])+"/";
+            std::string filePath = "../scenes/objects/" + std::string(p["NAME"])+"/";
             loadFromObj(filePath, std::string(p["OBJNAME"]), verts, normals, uvs, materialNames, MatNameToID);
             int materialID;
             const auto& trans = p["TRANS"];
@@ -139,10 +139,11 @@ void Scene::loadFromJSON(const std::string& jsonName)
                 geom.triData.uvs[2] = uvs[i + 2];
                 geoms.push_back(geom);
             }
+            
             continue;
         }
         else if (type == "env_map") {
-            std::string filePath = "../../../scenes/envmaps/" + std::string(p["NAME"])+"/";
+            std::string filePath = "../scenes/envmaps/" + std::string(p["NAME"])+"/";
             int width, height, channel;
             float* diffuseTexture = stbi_loadf(filePath.c_str(), &width, &height, &channel, 0);
             for (int i = 0; i < width * height; ++i) {
@@ -153,7 +154,8 @@ void Scene::loadFromJSON(const std::string& jsonName)
             env_height = height;
             continue;
         }
-        else {
+        else 
+        {
             std::cout << "unknown object type" << std::endl;
         }
         newGeom.materialid = MatNameToID[p["MATERIAL"]];
