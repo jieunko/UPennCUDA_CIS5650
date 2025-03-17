@@ -35,13 +35,13 @@ int main(int argc, char** argv)
 {
     startTimeString = currentTimeString();
 
-    if (argc < 2)
+    //if (argc < 2)
     {
         printf("Usage: %s SCENEFILE.json\n", argv[0]);
-        return 1;
+      //  return 1;
     }
 
-    const char* sceneFile = argv[1];
+    const char* sceneFile = " ../../../scenes/cornell_test.json";//argv[1];
 
     // Load scene file
     scene = new Scene(sceneFile);

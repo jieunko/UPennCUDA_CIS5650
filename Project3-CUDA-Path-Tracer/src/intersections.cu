@@ -91,12 +91,12 @@ __host__ __device__ float sphereIntersectionTest(
     }
     else if (t1 > 0 && t2 > 0)
     {
-        t = min(t1, t2);
+        t = glm::min(t1, t2);
         outside = true;
     }
     else
     {
-        t = max(t1, t2);
+        t = glm::max(t1, t2);
         outside = false;
     }
 
@@ -110,4 +110,46 @@ __host__ __device__ float sphereIntersectionTest(
     }
 
     return glm::length(r.origin - intersectionPoint);
+}
+
+__host__ __device__ float triangleIntersectionTest(
+    Geom tri,
+    Ray r,
+    glm::vec3& intersectionPoint,
+    glm::vec3& normal,
+    glm::vec2& uv,
+    bool& outside)
+{
+
+    Ray q;
+    q.origin = multiplyMV(tri.inverseTransform, glm::vec4(r.origin, 1.0f));
+    q.direction = glm::normalize(multiplyMV(tri.inverseTransform, glm::vec4(r.direction, 0.0f)));
+
+    glm::vec3 v0 = tri.triData.verts[0];
+    glm::vec3 v1 = tri.triData.verts[1];
+    glm::vec3 v2 = tri.triData.verts[2];
+
+    glm::vec3 n0 = tri.triData.normals[0];
+    glm::vec3 n1 = tri.triData.normals[1];
+    glm::vec3 n2 = tri.triData.normals[2];
+
+    glm::vec2 uv0 = tri.triData.uvs[0];
+    glm::vec2 uv1 = tri.triData.uvs[1];
+    glm::vec2 uv2 = tri.triData.uvs[2];
+
+    glm::vec3 baryCoords;
+    bool intersects = glm::intersectRayTriangle(q.origin, q.direction, v0, v1, v2, baryCoords);
+
+    if (intersects)
+    {
+        intersectionPoint = multiplyMV(tri.transform, glm::vec4(getPointOnRay(q, baryCoords.z), 1.0f));
+        glm::vec3 interpolatedNormal = (1.f - baryCoords.x - baryCoords.y) * n0 + baryCoords.x * n1 + baryCoords.y * n2;
+        normal = glm::normalize(multiplyMV(tri.invTranspose, glm::vec4(interpolatedNormal, 0.0f)));
+
+        uv = (1.f - baryCoords.x - baryCoords.y) * uv0 + baryCoords.x * uv1 + baryCoords.y * uv2;
+
+        return glm::length(r.origin - intersectionPoint);
+    }
+
+    return -1;
 }
