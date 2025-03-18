@@ -51,6 +51,13 @@
             "TYPE":"Specular",
             "RGB":[0.0, 0.98, 0.0],
             "ROUGHNESS":0.0
+        },
+        "microfacet_red":
+        {
+            "TYPE":"Microfacet",
+            "RGB":[0.0, 0.0, 0.9],
+            "SPEC_RGB":[0.9, 0.0, 0.0],
+            "ROUGHNESS":1.0
         }
     },
     "Camera":
@@ -117,7 +124,7 @@
         },
         {
             "TYPE":"sphere",
-            "MATERIAL":"glass",
+            "MATERIAL":"microfacet_red",
             "TRANS":[3.0,4.0,1.0],
             "ROTAT":[0.0,0.0,0.0],
             "SCALE":[3.0,3.0,3.0]

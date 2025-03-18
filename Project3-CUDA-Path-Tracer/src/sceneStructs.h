@@ -14,6 +14,12 @@ enum GeomType
     TRIANGLE
 };
 
+enum MicrofacetBRDF
+{
+    CookTorrence,
+
+};
+
 struct Ray
 {
     glm::vec3 origin;

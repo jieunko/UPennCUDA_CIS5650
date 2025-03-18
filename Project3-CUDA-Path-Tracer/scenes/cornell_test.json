@@ -119,6 +119,8 @@
             "TYPE":"mesh",
             "NAME":"Clock",
             "OBJNAME":"Clock_obj.obj",
+            "MATERIAL":"glass",
+            "USEMATERIAL":false,
             "TRANS":[3.0,4.0,1.0],
             "ROTAT":[0.0,0.0,0.0],
             "SCALE":[3.0,3.0,3.0]

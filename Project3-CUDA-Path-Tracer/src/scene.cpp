@@ -108,7 +108,7 @@ void Scene::loadFromJSON(const std::string& jsonName)
             std::vector<glm::vec3> normals;
             std::vector<glm::vec2> uvs;
             std::vector<std::string> materialNames;
-            std::string filePath = "../scenes/objects/" + std::string(p["NAME"])+"/";
+            std::string filePath = "../../../scenes/objects/" + std::string(p["NAME"])+"/";
             loadFromObj(filePath, std::string(p["OBJNAME"]), verts, normals, uvs, materialNames, MatNameToID);
             int materialID;
             const auto& trans = p["TRANS"];
@@ -119,7 +119,7 @@ void Scene::loadFromJSON(const std::string& jsonName)
             {
                 Geom geom;
                 geom.type = TRIANGLE;
-                materialID = materialNames.size() ? MatNameToID[materialNames[f++]] : MatNameToID[p["MATERIAL"]];
+                materialID = (materialNames.size() && p["USEMATERIAL"]) ? MatNameToID[materialNames[f++]] : MatNameToID[p["MATERIAL"]];
                 geom.materialid = materialID;
                 geom.translation = glm::vec3(trans[0], trans[1], trans[2]);
                 geom.rotation = glm::vec3(rotat[0], rotat[1], rotat[2]);
