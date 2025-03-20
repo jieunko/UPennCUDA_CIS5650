@@ -64,7 +64,7 @@ __host__ __device__ glm::vec3 sampleGGXNormal(
     return glm::normalize(h.x * tangentX + h.y * tangentY + h.z * normal);
 }
 
-__host__ __device__ float beckmannGGX(
+__host__ __device__ float trowbridgeGGX(
     const glm::vec3& normal,
     const glm::vec3& halfVector,
     float roughness)
@@ -73,9 +73,23 @@ __host__ __device__ float beckmannGGX(
     float NdotH = glm::max(glm::dot(normal, halfVector), 0.0f);
     float NdotH2 = NdotH * NdotH;
 
-    float denom = NdotH2 * (a - 1.0f) + 1.0f;
-    return (a * a) / (PI * denom * denom);
+    float denom = NdotH2 + (a - 1.0f);
+    return ((a * a)-1.0f) / (PI * denom * denom);
 }
+
+__host__ __device__ float beckmannGGX(
+    const glm::vec3& normal,
+    const glm::vec3& halfVector,
+    float roughness)
+{
+    float a = roughness * roughness;
+    float NdotH = glm::max(glm::dot(normal, halfVector), 0.0f);
+    float NdotH2 = NdotH * NdotH;
+    float exp = glm::exp((NdotH2 - 1.0)/a*NdotH2);
+
+    return exp / (PI * a* NdotH2 * NdotH2);
+}
+
 __host__ __device__ float schlickApproximation(
     float cosTheta,
     float R0)
@@ -88,7 +102,7 @@ __host__ __device__ float ggxPDF(
     const glm::vec3& halfVector,
     float roughness)
 {
-    float D = beckmannGGX(normal, halfVector, roughness);
+    float D = trowbridgeGGX(normal, halfVector, roughness);
 
     float VdotH = glm::max(glm::dot(viewDirection, halfVector), EPSILON);
     float NdotH = glm::max(glm::dot(normal, halfVector), 0.0f);
@@ -133,12 +147,13 @@ __host__ __device__ void CookTorranceMicrofacet(
         float cosThetaI = glm::max(glm::dot(normal, -pathSegment.ray.direction), EPSILON);
         float cosThetaO = glm::max(glm::dot(normal, reflectedDirection), EPSILON);
 
+        //float D = trowbridgeGGX(normal, wh, roughness);
         float D = beckmannGGX(normal, wh, roughness);
         float G = smithGeometry(cosThetaO, cosThetaI, alpha);
 
-        glm::vec3 specular = (m.specular.color * F * D * G / (4.f * cosThetaI * cosThetaO)) / ggxPDF(normal, -pathSegment.ray.direction, wh, roughness);
-        glm::vec3 diffuse = m.color * (1.0f - F) / PI;
-        pathSegment.color *= (diffuse + specular);
+        glm::vec3 specular = (m.specular.color * F * D * G / (4.f * cosThetaI * cosThetaO)); // ggxPDF(normal, -pathSegment.ray.direction, wh, roughness);
+        glm::vec3 diffuse = m.color / PI; //m.color * (1.0f - F) / PI;
+        pathSegment.color = (diffuse + specular);
     }
     pathSegment.ray.direction = reflectedDirection;
 }
@@ -227,7 +242,7 @@ __host__ __device__ void scatterRay(
                     //pathSegment.color = (1-R)* glm::dot(m.color, glm::vec3(0.3f, 0.3f, 0.3f)) / probDiffuse;  //probDiffuse;
                     refractedColor = (1 - R) * m.color;
                 }
-                pathSegment.color += reflectedColor + refractedColor;
+                pathSegment.color += (reflectedColor + refractedColor)/probDiffuse;
             }
             
         }
