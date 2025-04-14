@@ -9,21 +9,21 @@ CUDA Path Tracer
 ![cornell box result](https://github.com/user-attachments/assets/dbf9f5f3-0717-4621-800b-dd46273e9b3e)
 
 ### Glass-like Materials
-'''
+````
 * If total internal reflection:
-    &emsp;&emsp;Reflect wo
-    &emsp;&emsp;Set pdf to 1
-    &emsp;&emsp;Return reflectance / abs_cos_theta(*wi)
+    Reflect wo
+    Set pdf to 1
+   Return reflectance / abs_cos_theta(*wi)
 * Else, calculate R uscing Schlick's approximation:
-    &emsp;&emsp;If coin_flip(R):
-        &emsp;&emsp;&emsp;&emsp;Reflect wo
-        &emsp;&emsp;&emsp;&emsp;Set pdf to R
-        &emsp;&emsp;&emsp;&emsp;Return R * reflectance / abs_cos_theta(*wi)
-    &emsp;&emsp;Else:
-        &emsp;&emsp;&emsp;&emsp;Refract wo
-        &emsp;&emsp;&emsp;&emsp;Set pdf to 1-R
-        &emsp;&emsp;&emsp;&emsp;Return 1-R * transmittance / abs_cos_theta(*wi) / eta^2
-'''
+    If coin_flip(R):
+       Reflect wo
+         Set pdf to R
+         R * reflectance / abs_cos_theta(*wi)
+    Else:
+        Refract wo
+        Set pdf to 1-R
+        Return 1-R * transmittance / abs_cos_theta(*wi) / eta^2
+````
 
 ### Microfacet Materials
 * Cook-Torrance Microfacet Model
