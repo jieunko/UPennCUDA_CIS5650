@@ -9,6 +9,7 @@ CUDA Path Tracer
 ![cornell box result](https://github.com/user-attachments/assets/dbf9f5f3-0717-4621-800b-dd46273e9b3e)
 
 ### Glass-like Materials
+'''
 * If total internal reflection:
     &emsp;&emsp;Reflect wo
     &emsp;&emsp;Set pdf to 1
@@ -22,6 +23,7 @@ CUDA Path Tracer
         &emsp;&emsp;&emsp;&emsp;Refract wo
         &emsp;&emsp;&emsp;&emsp;Set pdf to 1-R
         &emsp;&emsp;&emsp;&emsp;Return 1-R * transmittance / abs_cos_theta(*wi) / eta^2
+'''
 
 ### Microfacet Materials
 * Cook-Torrance Microfacet Model
