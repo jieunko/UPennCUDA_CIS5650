@@ -37,8 +37,8 @@ $F(\theta) = f_0 + (1 - f_0)(1 - \cos\theta)^5$
 
 * Smith's Geometry Term
 
-$G(\omega_i, \omega_o) = \frac{1}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}$  &emsp;  $\Lambda(\theta) = \frac{-1 + \sqrt{1 + \tan^2\theta}}{2}$ 
-&emsp;&emsp;&emsp;$tan^2\theta = \frac{\alpha^2}{\cos^2\theta}, where\ \alpha\ is\ a\ roughness\ parameter $
+$G(\omega_i, \omega_o) = \frac{1}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}  $  &emsp;  $ \Lambda(\theta) = \frac{-1 + \sqrt{1 + \tan^2\theta}}{2}$ 
+&emsp;&emsp;&emsp; $ tan^2\theta = \frac{\alpha^2}{\cos^2\theta},$ $where\ \alpha\ is\ a\ roughness\ parameter $
 
 ### references
 [1] https://henryzxu.github.io/pathtracing-p2/
