@@ -25,15 +25,22 @@ CUDA Path Tracer
 
 ### Microfacet Materials
 * Cook-Torrance Microfacet Model
+
+
 $ f_r(\omega_i, \omega_o) = \frac{F(\omega_i, \omega_o) \cdot G(\omega_i, \omega_o) \cdot D(\mathbf{h})}{4 \cdot (\mathbf{n} \cdot \omega_i) \cdot (\mathbf{n} \cdot \omega_o)} $
 
 * Beckmann Normal Distribution Function
+
+
 &emsp;
 $D(\mathbf{h}) = \frac{e^{-\tan^2\theta_m / \alpha^2}}{\pi \alpha^2 \cos^4\theta_m}$,  &emsp;where $\theta_m$ is the angle between $\mathbf{h}$ and $\mathbf{n}$, and $\alpha$ 
 
 * Fresnel with Schlick's approximation
+
+
 &emsp;
-&emsp;$F(\theta) = f_0 + (1 - f_0)(1 - \cos\theta)^5$
+&emsp;
+$F(\theta) = f_0 + (1 - f_0)(1 - \cos\theta)^5$
 
 * Smith's Geometry Term
 
