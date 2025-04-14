@@ -26,7 +26,7 @@ CUDA Path Tracer
 ### Microfacet Materials
 * Cook-Torrance Microfacet Model
 
-\[ f_r(\omega_i, \omega_o) = \frac{F(\omega_i, \omega_o) \cdot G(\omega_i, \omega_o) \cdot D(\mathbf{h})}{4 \cdot (\mathbf{n} \cdot \omega_i) \cdot (\mathbf{n} \cdot \omega_o)} \]
+$\` f_r(\omega_i, \omega_o) = \frac{F(\omega_i, \omega_o) \cdot G(\omega_i, \omega_o) \cdot D(\mathbf{h})}{4 \cdot (\mathbf{n} \cdot \omega_i) \cdot (\mathbf{n} \cdot \omega_o)} \`$
 
 * Beckmann Normal Distribution Function
 
