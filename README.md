@@ -37,13 +37,18 @@ $F(\theta) = f_0 + (1 - f_0)(1 - \cos\theta)^5$
 
 * Smith's Geometry Term
 
-$G(\omega_i, \omega_o) = \frac{1}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}  \Lambda(\theta) = \frac{-1 + \sqrt{1 + \tan^2\theta}}{2}$ \\
+$G(\omega_i, \omega_o) = \frac{1}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}  \Lambda(\theta) = \frac{-1 + \sqrt{1 + \tan^2\theta}}{2}$ 
+
+
  $tan^2\theta = \frac{\alpha^2}{\cos^2\theta}, where\ \alpha\ is\ a\ roughness\ parameter $
 
 ### references
 [1] https://henryzxu.github.io/pathtracing-p2/
+
 [2] https://youtu.be/gya7x9H3mV0?si=-cCrC2L0buz2hXyx
+
 [3] Microfacet Models for Refraction through Rough Surfaces, EG, 2007
+
 
 ###### TODOs
 * Adding BVH 
