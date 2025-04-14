@@ -44,6 +44,15 @@ void checkCUDAErrorFn(const char* msg, const char* file, int line)
 #endif // ERRORCHECK
 }
 
+struct isPathActive
+{
+    __host__ __device__
+        bool operator()(const PathSegment& path)
+    {
+        return path.remainingBounces > 0;
+    }
+};
+
 __host__ __device__
 thrust::default_random_engine makeSeededRandomEngine(int iter, int index, int depth)
 {
@@ -494,6 +503,11 @@ void pathtrace(uchar4* pbo, int frame, int iter)
             hst_scene->env_height
         );
         cudaDeviceSynchronize();
+
+        thrust::device_ptr<PathSegment> dev_ptr(dev_paths);
+        thrust::device_ptr<PathSegment> dev_ptr_end = thrust::stable_partition(thrust::device, dev_ptr, dev_ptr + num_paths, isPathActive());
+        cudaDeviceSynchronize();
+        num_paths = dev_ptr_end - dev_ptr;
 
         iterationComplete = (num_paths == 0) || (depth == traceDepth); // TODO: should be based off stream compaction results.
 
